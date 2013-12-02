@@ -51,7 +51,8 @@ namespace GettingStarted
                 Filters = new IFilter[] 
                 {
                     new WarpFilter(WarpEffect.Alien, 0.5),
-                    new RotationFilter(35)
+                    new RotationFilter(35),
+                    new GrayscaleFilter()
                     //new CropFilter(new Windows.Foundation.Rect(400,400,500,500))
                 },
                 Source = imageSource
