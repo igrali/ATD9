@@ -8,3 +8,10 @@ GettingStarted/GettingStarted/obj/
 GettingStarted/packages/
 *.sap
 *.pptx
+DemoImaging/
+GettingStarted/ChromaKey/Bin/
+GettingStarted/ChromaKey/obj/ARM/Debug/App.g.cs
+GettingStarted/ChromaKey/obj/ARM/Debug/App.g.i.cs
+GettingStarted/ChromaKey/obj/
+GettingStarted/CustomFilter/Bin/
+GettingStarted/CustomFilter/obj/

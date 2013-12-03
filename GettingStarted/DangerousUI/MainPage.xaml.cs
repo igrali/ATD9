@@ -16,6 +16,9 @@ using Microsoft.Xna.Framework.Media;
 using Microsoft.Phone.Info;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.IO;
+using System.IO.IsolatedStorage;
+using Nokia.InteropServices.WindowsRuntime;
+using Windows.Storage;
 
 namespace DangerousUI
 {
@@ -58,15 +61,29 @@ namespace DangerousUI
             renderBitmap = new WriteableBitmap((int)(ResultImage.Width * ScreenToPixelFactor / renderScale), (int)(ResultImage.Height * ScreenToPixelFactor / renderScale));
             tempBitmap = new WriteableBitmap((int)(ResultImage.Width * ScreenToPixelFactor / renderScale), (int)(ResultImage.Height * ScreenToPixelFactor / renderScale));
             ResultImage.Source = renderBitmap;
+
             renderer = new WriteableBitmapRenderer(filterEffects, tempBitmap, OutputOption.Stretch);
         }
 
-        private void Button_Click(object sender, RoutedEventArgs e)
+        private async void Button_Click(object sender, RoutedEventArgs e)
         {
             var photoChooser = new PhotoChooserTask();
             photoChooser.Completed += photoChooser_Completed;
             photoChooser.ShowCamera = true;
             photoChooser.Show();
+
+            //loading from file
+            //string imageFile = @"Assets\ApplicationIcon.png";
+            //var file = await Windows.ApplicationModel.Package.Current.InstalledLocation.GetFileAsync(imageFile);
+            
+            //using (var foregroundSource = new StorageFileImageSource(file))
+            //{
+            //    filterEffects.Source = foregroundSource;
+            //    filterEffects.Filters = new IFilter[] { new ContrastFilter(0.9) };
+            //    await renderer.RenderAsync();
+            //    tempBitmap.Pixels.CopyTo(renderBitmap.Pixels, 0);
+            //    renderBitmap.Invalidate();
+            //}
         }
 
         async void photoChooser_Completed(object sender, PhotoResult e)
@@ -78,17 +95,22 @@ namespace DangerousUI
                 OriginalImage.Source = bmp;
 
                 resultStream.Position = 0;
-                IImageProvider imageSource = new StreamImageSource(resultStream);
+                
+                using (MemoryStream ms = new MemoryStream())
+                {
+                    resultStream.CopyTo(ms);
+                    IImageProvider imageSource = new BufferImageSource(ms.GetWindowsRuntimeBuffer());
+                    
+                    filterEffects.Source = imageSource;
 
-                filterEffects.Source = imageSource;
-
-                await renderer.RenderAsync();
-                tempBitmap.Pixels.CopyTo(renderBitmap.Pixels, 0);
-                renderBitmap.Invalidate();
+                    await renderer.RenderAsync();
+                    tempBitmap.Pixels.CopyTo(renderBitmap.Pixels, 0);
+                    renderBitmap.Invalidate();
+                }
             }            
         }
 
-        private async void ValueSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
+        private void ValueSlider_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
             _toDoActions.Enqueue(() => 
                                 {
