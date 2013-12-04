@@ -65,7 +65,6 @@ namespace GettingStarted
                 new WriteableBitmapRenderer(filterEffects, writeableBitmapSmallResult, OutputOption.Stretch);
 
             writeableBitmapSmallResult = await renderer.RenderAsync();
-
             ResultImage.Source = writeableBitmapSmallResult;
 
             resultStream.Dispose();

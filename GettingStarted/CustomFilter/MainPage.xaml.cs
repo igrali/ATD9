@@ -16,11 +16,24 @@ namespace CustomFilter
 {
     public partial class MainPage : PhoneApplicationPage
     {
+
+        FilterEffect effects;
+        List<IFilter> filters;
         // Constructor
         public MainPage()
         {
             InitializeComponent();
+            filters = new List<IFilter> 
+                {
+                    new ContrastFilter(0.9),
+                    new LomoFilter(),
+                    new FlipFilter(FlipMode.Horizontal)
+                };
 
+            effects = new FilterEffect()
+            {
+                Filters = filters
+            };
             // Sample code to localize the ApplicationBar
             //BuildLocalizedApplicationBar();
         }
@@ -33,6 +46,8 @@ namespace CustomFilter
             photoChooser.Show();
         }
 
+        IImageProvider imageSource;
+
         async void photoChooser_Completed(object sender, PhotoResult e)
         {
             var resultStream = e.ChosenPhoto;
@@ -43,23 +58,43 @@ namespace CustomFilter
             OriginalImage.Source = bmp;
 
             resultStream.Position = 0;
-            IImageProvider imageSource = new StreamImageSource(resultStream);
+            imageSource = new StreamImageSource(resultStream);
+            
+            using (WeirdBlue wBlue = new WeirdBlue(imageSource))
+            {
+                effects.Source = wBlue;
+                WriteableBitmap writeableBitmapSmallResult = new WriteableBitmap((int)ResultImage.Width, (int)ResultImage.Height);
+                WriteableBitmapRenderer renderer =
+                new WriteableBitmapRenderer(effects, writeableBitmapSmallResult, OutputOption.Stretch);
 
-            WeirdBlue wBlue = new WeirdBlue(imageSource);
+                writeableBitmapSmallResult = await renderer.RenderAsync();
 
-            //WriteableBitmap writeableBitmapResult = new WriteableBitmap(bmp.PixelWidth, bmp.PixelHeight);
-            WriteableBitmap writeableBitmapSmallResult = new WriteableBitmap((int)ResultImage.Width, (int)ResultImage.Height);
-
-            WriteableBitmapRenderer renderer =
-                new WriteableBitmapRenderer(wBlue, writeableBitmapSmallResult, OutputOption.Stretch);
-
-            writeableBitmapSmallResult = await renderer.RenderAsync();
-
-            ResultImage.Source = writeableBitmapSmallResult;
+                ResultImage.Source = writeableBitmapSmallResult;
+            }
 
             resultStream.Dispose();
         }
 
+        private async void Button_Click2(object sender, RoutedEventArgs e)
+        {
+            if (filters.Count>0)
+            {
+                filters.RemoveAt(filters.Count - 1);
+
+                using (WeirdBlue wBlue = new WeirdBlue(imageSource))
+                {
+                    effects.Filters = filters;
+                    effects.Source = wBlue;
+                    WriteableBitmap writeableBitmapSmallResult = new WriteableBitmap((int)ResultImage.Width, (int)ResultImage.Height);
+                    WriteableBitmapRenderer renderer =
+                    new WriteableBitmapRenderer(effects, writeableBitmapSmallResult, OutputOption.Stretch);
+
+                    writeableBitmapSmallResult = await renderer.RenderAsync();
+
+                    ResultImage.Source = writeableBitmapSmallResult;
+                }
+            }
+        }
         private void ResultImage_Tap(object sender, System.Windows.Input.GestureEventArgs e)
         {
 
